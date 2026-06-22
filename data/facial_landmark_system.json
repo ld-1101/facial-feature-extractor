@@ -1,0 +1,265 @@
+{
+  "_description": "基于人脸识别关键点框架的面部特征库 v3.0 — 参照 dlib 68点 / MediaPipe 468点 / 人体测量学黄金比例。每个维度由可测量的几何关系定义，而非模糊形容词。",
+  "_references": [
+    "dlib 68-point facial landmarks (iBUG 300-W dataset)",
+    "MediaPipe Face Mesh 468-point 3D topology",
+    "Craniofacial anthropometry (Farkas standards)",
+    "Facial golden ratio (1:1.618 — neoclassical canons)",
+    "One Millisecond Face Alignment (Kazemi & Sullivan 2014)",
+    "Real-time Facial Surface Geometry (Kartynnik et al. 2019)"
+  ],
+  "_version": "3.0",
+
+  "landmark_regions": {
+    "_note": "参照 dlib 68点索引, MediaPipe 468点在此基础上细化为面部网格",
+    "jawline": "dlib索引0-16, 17个点勾勒下颌轮廓 → 可计算: 脸长/脸宽比、下颌角度、下巴宽度",
+    "right_eyebrow": "dlib索引17-21, 5个点 → 可计算: 眉长、眉峰位置(1/3/2/3处)、眉尾角度",
+    "left_eyebrow": "dlib索引22-26, 5个点",
+    "nose_bridge": "dlib索引27-30, 4个点 → 可计算: 鼻梁高度、鼻背直线度",
+    "nose_tip": "dlib索引31-35, 5个点 → 可计算: 鼻头宽度、鼻翼宽度、鼻孔可见度",
+    "right_eye": "dlib索引36-41, 6个点 → 可计算: 眼裂长度、眼裂高度、内眦间距、瞳孔位置",
+    "left_eye": "dlib索引42-47, 6个点",
+    "mouth_outer": "dlib索引48-59, 12个点 → 可计算: 嘴宽、上唇厚度、下唇厚度、唇峰高度",
+    "mouth_inner": "dlib索引60-67, 8个点 (MediaPipe额外细化)"
+  },
+
+  "geometric_measurements": {
+    "_description": "从关键点坐标计算的可量化面部比例。每个测量值可映射为数值范围，用于精确描述。",
+
+    "face_proportions": {
+      "face_length_to_width": {
+        "description": "发际线中点→下巴尖 / 左右颧弓间距",
+        "female_average": 1.35,
+        "golden_ratio": 1.618,
+        "ranges": {
+          "short_wide": "< 1.30 (短宽脸/童颜)",
+          "balanced": "1.30 - 1.45 (标准脸)",
+          "elongated": "> 1.45 (窄长脸)"
+        }
+      },
+      "three_sections_ratio": {
+        "description": "发际线→眉间 : 眉间→鼻底 : 鼻底→下巴尖 = 1:1:1",
+        "ideal": "三等分均等",
+        "variants": ["上庭偏长", "中庭偏长", "下庭偏长", "三庭均等"]
+      },
+      "five_eyes_width": {
+        "description": "面部宽度 = 5只眼睛的宽度。左颞→左外眦 = 左眼宽 = 内眦间距 = 右眼宽 = 右外眦→右颞",
+        "ideal": "五眼均分",
+        "variants": ["内眦间距偏宽", "内眦间距偏窄(斗鸡眼感)", "颞部偏窄", "五眼均分"]
+      }
+    },
+
+    "eye_measurements": {
+      "eye_fissure_length": {
+        "description": "内眦→外眦水平距离",
+        "ranges": {"small": "< 28mm", "medium": "28-32mm", "large": "> 32mm"}
+      },
+      "eye_fissure_height": {
+        "description": "上睑最高点→下睑最低点垂直距离",
+        "ranges": {"narrow": "< 9mm", "medium": "9-12mm", "wide": "> 12mm"}
+      },
+      "intercanthal_distance": {
+        "description": "左右内眦间距",
+        "female_ideal": "约等于一只眼裂长度",
+        "ranges": {"narrow": "< 0.9眼宽", "ideal": "0.9-1.1眼宽", "wide": "> 1.1眼宽"}
+      },
+      "canthal_tilt": {
+        "description": "内眦→外眦连线与水平线的夹角",
+        "ranges": {"positive_tilt": "+5°~+10°(上扬/桃花眼)", "neutral": "-2°~+5°(水平)", "negative_tilt": "< -2°(下垂/狗狗眼)"}
+      },
+      "eyelid_crease_height": {
+        "description": "上睑褶皱线到睫毛根部的垂直距离",
+        "ranges": {"monolid": "0mm(单眼皮)", "inner_double": "1-2mm(内双)", "medium_double": "3-5mm(适中)", "wide_double": "> 6mm(欧式大双)"}
+      },
+      "upper_eyelid_exposure": {
+        "description": "瞳孔上方被上眼睑覆盖的程度",
+        "ranges": {"ptosis_mild": "遮盖>2mm(轻度上睑下垂)", "normal": "遮盖0-1mm(正常)", "exposed": "瞳孔完全露出(圆眼)"}
+      },
+      "sclera_show_below_iris": {
+        "description": "虹膜下方露出的眼白(三白眼特征)",
+        "ranges": {"none": "无(正常)", "mild": "< 1mm(轻微)", "obvious": "> 1mm(下三白)"}
+      }
+    },
+
+    "nose_measurements": {
+      "nasal_length": {
+        "description": "眉间→鼻尖垂直距离",
+        "ranges": {"short": "< 42mm", "medium": "42-50mm", "long": "> 50mm"}
+      },
+      "nasal_bridge_height": {
+        "description": "鼻根(山根)相对内眦平面的突出高度",
+        "ranges": {"flat": "< 2mm(塌鼻梁)", "low": "2-4mm", "medium": "4-6mm", "high": "6-9mm", "very_high": "> 9mm(混血感)"}
+      },
+      "nasal_tip_projection": {
+        "description": "鼻尖到面部平面的突出距离 / 鼻长",
+        "ideal_ratio": "0.55-0.60",
+        "ranges": {"under_projected": "< 0.50(鼻尖偏短)", "ideal": "0.50-0.65", "over_projected": "> 0.65(鼻尖过长)"}
+      },
+      "nasal_tip_width_to_alar_width": {
+        "description": "鼻头宽度 / 鼻翼宽度",
+        "ideal": "鼻头略窄于鼻翼(约0.8-0.9)",
+        "variants": ["鼻头窄于鼻翼(精致)", "鼻头等于鼻翼", "鼻头宽于鼻翼(蒜头鼻)"]
+      },
+      "nasolabial_angle": {
+        "description": "鼻小柱与上唇的夹角",
+        "female_ideal": "95°-105°",
+        "ranges": {"acute": "< 90°(鼻尖下垂)", "ideal": "90°-110°", "obtuse": "> 110°(朝天鼻/猪鼻子)"}
+      },
+      "columella_show": {
+        "description": "侧面观鼻小柱露出程度",
+        "ranges": {"hidden": "不外露", "ideal_show": "2-3mm", "excessive": "> 4mm(鼻小柱下垂)"}
+      }
+    },
+
+    "lip_measurements": {
+      "mouth_width_to_nose_width": {
+        "description": "嘴角间距 / 鼻翼宽度",
+        "ideal": "1.4-1.6",
+        "ranges": {"narrow_mouth": "< 1.3(樱桃小口)", "balanced": "1.3-1.7", "wide_mouth": "> 1.7(大嘴)"}
+      },
+      "upper_lip_to_lower_lip": {
+        "description": "上唇高度 / 下唇高度 (侧面)",
+        "female_ideal": "1:1.6(下唇略厚于上唇)",
+        "golden_ratio": "1:1.618"
+      },
+      "upper_lip_thickness": {"ranges": {"thin": "< 5mm", "medium": "5-8mm", "full": "8-12mm", "very_full": "> 12mm"}},
+      "lower_lip_thickness": {"ranges": {"thin": "< 7mm", "medium": "7-10mm", "full": "10-14mm", "very_full": "> 14mm"}},
+      "vermillion_border_definition": {
+        "description": "唇红缘(唇线)清晰度",
+        "ranges": ["边界模糊无轮廓", "边界清晰自然", "边界锐利如画(唇线笔感)"]
+      },
+      "cupids_bow_definition": {
+        "description": "唇峰/丘比特弓的清晰度",
+        "ranges": ["扁平无唇峰", "柔和微显", "清晰棱角分明"]
+      },
+      "oral_commissure_angle": {
+        "description": "嘴角相对水平线的角度",
+        "ranges": {"upturned": "> +3°(微笑唇/嘴角上扬)", "neutral": "-3°~+3°", "downturned": "< -3°(嘴角下垂/苦相)"}
+      },
+      "philtrum_length": {
+        "description": "鼻底→上唇红缘垂直距离",
+        "female_ideal": "11-13mm",
+        "ranges": {"short": "< 10mm(偏短/幼态)", "ideal": "10-15mm", "long": "> 15mm(偏长/成熟)"}
+      }
+    },
+
+    "jaw_chin_measurements": {
+      "bigonial_width": {
+        "description": "左右下颌角间距",
+        "relation": "与颧弓宽度的比值",
+        "ranges": {"narrow_jaw": "< 0.80(V脸)", "balanced": "0.80-0.95", "wide_jaw": "> 0.95(方脸/国字脸)"}
+      },
+      "mandibular_angle": {
+        "description": "下颌角的角度(下颌升支与下颌体的夹角)",
+        "female_ideal": "120°-130°(柔和)",
+        "ranges": {"sharp": "< 115°(棱角分明/男性化)", "soft": "120°-135°", "obtuse": "> 135°(圆润无棱角)"}
+      },
+      "chin_projection": {
+        "description": "侧面观下巴尖相对下唇的突出程度",
+        "ranges": {"retruded": "下巴后缩(下颌后缩)", "balanced": "与下唇齐平或微前突", "protruded": "明显前突(地包天倾向)"}
+      },
+      "chin_width_to_mouth_width": {
+        "description": "下巴宽度 / 嘴角间距",
+        "ideal": "约1.0-1.2",
+        "ranges": {"pointed_chin": "< 0.8(尖下巴)", "rounded_chin": "0.8-1.2", "square_chin": "> 1.2(方下巴)"}
+      }
+    },
+
+    "cheekbone_measurements": {
+      "bizygomatic_width": {
+        "description": "左右颧弓最宽处间距,面部最宽处",
+        "relation_to_face_length": "约等于面部长度的0.65-0.75",
+        "ranges": {"narrow": "面宽<面长×0.65", "balanced": "面宽=面长×0.65-0.75", "wide": "面宽>面长×0.75"}
+      },
+      "cheekbone_prominence": {
+        "description": "颧骨体相对面部平面的突出程度",
+        "ranges": ["扁平(颧骨低平)", "适中(平滑)", "突出(高颧骨立体)", "颧弓外扩(太阳穴凹陷感)"]
+      },
+      "malar_fat_pad_volume": {
+        "description": "苹果肌(颧脂垫)饱满度",
+        "ranges": ["扁平凹陷(显老/刻薄)", "自然适中", "饱满圆润(笑起来甜美/幼态)", "过度饱满(肿泡感)"]
+      }
+    },
+
+    "forehead_measurements": {
+      "forehead_height": {
+        "description": "发际线中点→眉间距离, 正常=面长的1/3",
+        "ranges": {"low": "< 面长的30% (低额头)", "balanced": "面长的30%-36%", "high": "> 面长的36% (高额头/大脑门)"}
+      },
+      "forehead_inclination": {
+        "description": "侧面观额头倾斜角度",
+        "ranges": ["后倾(斜坡额)", "直立", "前凸(寿星额/饱满)"]
+      },
+      "supraorbital_ridge": {
+        "description": "眉弓突出程度",
+        "ranges": ["平坦(女性化)", "微凸", "突出(男性化/T区立体)"]
+      },
+      "temple_concavity": {
+        "description": "太阳穴(颞部)凹陷程度",
+        "ranges": ["饱满(年轻态)", "轻微凹陷", "明显凹陷(太阳穴凹陷/显老)"]
+      }
+    }
+  },
+
+  "semantic_descriptors": {
+    "_description": "将几何测量映射为人类可理解的描述词汇。每个维度都有精确的数值对应。",
+
+    "face_shape_classification": {
+      "_method": "由 face_length_to_width + bigonial_width_ratio + cheekbone_width 三个测量值联合判定",
+      "oval": "面长/面宽≈1.35-1.50, 下颌略窄于颧骨, 下颌角柔和120°+, 鹅蛋脸—最标准上镜",
+      "heart": "额头最宽, 颧骨其次, 下颌急剧收窄<0.75颧宽, 尖下巴<0.8嘴宽, 瓜子脸/心形脸",
+      "round": "面长/面宽<1.30, 下颌角>130°圆润, 面颊饱满苹果肌大, 圆脸/娃娃脸",
+      "square": "面长/面宽≈1.0-1.3, 下颌宽>0.95颧宽, 下颌角<120°棱角, 方脸/国字脸",
+      "long_rectangular": "面长/面宽>1.50, 额头≈颧宽≈下颌宽, 长脸/长方形脸",
+      "diamond": "颧宽明显>额头宽和下颌宽, 下巴尖, 菱形脸/钻石脸—高级感",
+      "triangle_pear": "额头最窄, 下颌最宽, 面颊丰满, 梨形脸/正三角脸",
+      "inverted_triangle": "额头最宽, 向下逐渐收窄, 尖下巴, 倒三角脸"
+    },
+
+    "eye_shape_classification": {
+      "_method": "由 canthal_tilt + eye_fissure_height/length + eyelid_crease 联合判定",
+      "almond": "眼裂长/高>3.0, 眼尾微扬+5°, 外双适中 — 杏眼",
+      "peach_blossom": "眼裂长/高≈2.5-3.0, 眼尾扬+7°, 下睑微弧, 卧蚕明显 — 桃花眼(含情)",
+      "phoenix": "眼裂长/高>3.5, 眼尾大幅上扬>+10°, 细长上挑 — 丹凤眼(古典美)",
+      "round": "眼裂长/高<2.5, 瞳孔露出多, 圆而大 — 圆眼/荔枝眼(可爱)",
+      "sleepy": "眼尾下垂<-2°, 外眼角低于内眼角 — 垂眼/狗狗眼(无辜)",
+      "fox": "眼裂长/高>3.0, 眼尾上扬>+8°, 内眼角尖锐下勾, 狭长 — 狐狸眼(妩媚)",
+      "slit": "眼裂长/高>4.0, 眼裂极窄<7mm — 眯缝眼/细长眼",
+      "prominent": "眼球突出度偏高, 眼裂大 — 凸眼/金鱼眼"
+    },
+
+    "nose_shape_classification": {
+      "_method": "由 nasal_bridge_height + nasal_tip_width/alar + nasolabial_angle 联合判定",
+      "straight_refined": "山根高>6mm, 鼻背笔直, 鼻头窄<0.8鼻翼, 鼻唇角95° — 秀气直鼻(整形模板)",
+      "slightly_upturned": "山根中高, 鼻唇角>110°, 鼻头微翘 — 翘鼻(俏皮甜美)",
+      "fleshy_bulbous": "鼻头宽>鼻翼, 鼻翼丰满, 鼻头圆 — 肉鼻/蒜头鼻(亲和)",
+      "roman_aquiline": "鼻背有驼峰凸起, 鼻尖微下勾 — 驼峰鼻/鹰钩鼻(个性)",
+      "flat_low": "山根<3mm几无, 鼻梁低平, 鼻翼宽 — 塌鼻梁/鞍鼻",
+      "turned_up": "鼻唇角>120°, 鼻孔正面可见 — 朝天鼻/短鼻",
+      "hawk_hooked": "鼻尖明显下勾超过鼻小柱 — 鹰钩鼻(阴鸷感)"
+    },
+
+    "lip_shape_classification": {
+      "_method": "由 mouth_width_ratio + upper/lower_thickness + commissure_angle + cupids_bow 联合判定",
+      "m_shape": "唇峰清晰>0.8清晰度, 唇珠突出 — M唇/花瓣唇(精致/最受欢迎)",
+      "heart_shape": "上唇唇峰极高, 下唇饱满, 整体心形 — 心形唇(甜美)",
+      "full_sensual": "上下唇均饱满>10mm, 嘴宽偏大 — 丰满厚唇(性感/欧美)",
+      "thin_elegant": "上下唇均<6mm, 唇线清晰 — 薄唇(清冷/高级)",
+      "cherry_small": "嘴宽<1.3鼻宽, 小且饱满 — 樱桃小口(古典/幼态)",
+      "smiling_lips": "嘴角上扬>+3°, 即使无表情也像在微笑 — 微笑唇(亲和/整形热门)",
+      "downturned": "嘴角<-3°, 无表情时显悲伤 — 覆舟唇/苦相唇",
+      "asymmetrical": "左右唇峰高度不一致或嘴角高度不同"
+    }
+  },
+
+  "ratios_of_beauty": {
+    "_description": "跨文化的面部美学黄金比例。用于评估和优化虚拟人脸。",
+    "vertical_thirds": "发际线→眉间 : 眉间→鼻底 : 鼻底→下巴 = 1:1:1",
+    "horizontal_fifths": "面部宽度五等分, 每份=一只眼的宽度",
+    "eye_mouth_alignment": "瞳孔间距 ≈ 嘴角间距 (或嘴宽=1.5×眼裂长)",
+    "nose_width_eyebrow": "鼻翼宽度 ≈ 内眦间距",
+    "lip_position": "鼻底→上唇 : 下唇→下巴 ≈ 1:2 (下庭黄金分割点)",
+    "facial_balance_index": "(左右面部不对称度) < 3% 为高度对称",
+    "canonical_beauty_ratios_summary": "三庭均等 + 五眼均分 + 鼻唇角95° + 下颌角125° + 面长面宽比1.45 + 眼距=眼裂长 + 嘴宽=1.5鼻宽"
+  }
+}
