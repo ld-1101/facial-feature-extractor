@@ -1,5 +1,5 @@
 """
-人脸特征提取器 — 基于 MIMO v2.5 视觉分析 + 几何测量体系
+人脸特征提取器 — 基于视觉模型分析 + 几何测量体系
 ========================================================
 从照片中提取完整的人脸几何特征，生成可用于 AI 生图的精确描述。
 
@@ -22,24 +22,24 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 
 # ============================================================
-# 配置
+# 配置 — 替换为你的 API 端点
 # ============================================================
 
 ENDPOINTS = {
-    "direct": "https://api.xiaomimimo.com/v1/chat/completions",
-    "token-plan": "https://token-plan-cn.xiaomimimo.com/v1/chat/completions",
+    "direct": "https://api.example.com/v1/chat/completions",
+    "token-plan": "https://api.example.com/v1/chat/completions",
 }
 
 def load_api_key():
-    """从环境变量或 .env 加载 MIMO API Key"""
+    """从环境变量或 .env 加载 API Key"""
     import os
-    key = os.environ.get("MIMO_API_KEY", "")
+    key = os.environ.get("VISION_API_KEY", "")
     if key:
         return key
     env_file = ROOT / ".env"
     if env_file.exists():
         for line in env_file.read_text(encoding="utf-8").strip().split("\n"):
-            if "MIMO_API_KEY=" in line:
+            if "VISION_API_KEY=" in line:
                 return line.split("=", 1)[1].strip()
     return ""
 
@@ -54,14 +54,14 @@ def load_default_dna():
 
 
 # ============================================================
-# MIMO 分析
+# 视觉分析
 # ============================================================
 
 def analyze_photo(photo_path: str, partial: bool = False) -> dict:
-    """用 MIMO 分析照片，返回结构化面部特征 JSON"""
+    """用视觉模型分析照片，返回结构化面部特征 JSON"""
     api_key = load_api_key()
     if not api_key:
-        raise RuntimeError("MIMO_API_KEY 未设置。export MIMO_API_KEY=xxx 或创建 .env 文件")
+        raise RuntimeError("VISION_API_KEY 未设置。export VISION_API_KEY=xxx 或创建 .env 文件")
 
     photo = Path(photo_path)
     if not photo.exists():
@@ -149,7 +149,7 @@ def _analyze_full(api_key: str, img_b64: str, mime: str) -> dict:
             {"type": "text", "text": "请精确分析这张照片中人物的面部几何特征，每个维度给出具体数值。"}
         ]}
     ]
-    return _call_mimo(api_key, messages)
+    return _call_vision(api_key, messages)
 
 
 def _analyze_partial(api_key: str, img_b64: str, mime: str) -> dict:
@@ -184,7 +184,7 @@ def _analyze_partial(api_key: str, img_b64: str, mime: str) -> dict:
             {"type": "text", "text": "分析这张照片。面部可能模糊，只提取可见特征，不可见填null。"}
         ]}
     ]
-    result = _call_mimo(api_key, messages)
+    result = _call_vision(api_key, messages)
 
     # 自动合并默认面部模板
     default_dna = load_default_dna()
@@ -209,21 +209,20 @@ def _analyze_partial(api_key: str, img_b64: str, mime: str) -> dict:
     return merged
 
 
-def _call_mimo(api_key: str, messages: list) -> dict:
-    """调用 MIMO API"""
+def _call_vision(api_key: str, messages: list) -> dict:
+    """调用视觉模型 API"""
     import requests
-    # 使用 token-plan 端点（Bearer 鉴权）
     ep = ENDPOINTS["token-plan"]
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
 
     body = {
-        "model": "mimo-v2.5",
+        "model": "vision-v1",
         "messages": messages,
         "max_completion_tokens": 2048,
         "temperature": 0.3,
     }
 
-    print(f"[MIMO] analyzing via token-plan...")
+    print(f"[Vision] analyzing...")
     resp = requests.post(ep, headers=headers, json=body, timeout=120)
     resp.raise_for_status()
 
