@@ -2,7 +2,23 @@
 
 基于**视觉模型** + **人脸关键点几何测量体系**（参照 dlib 68点 / MediaPipe 468点 / Farkas 颅面人体测量学）的人脸特征提取器。
 
-从照片中自动提取 **80+ 个可量化的人脸几何维度**，生成可供 AI 生图模型（Seedream / Stable Diffusion / Midjourney）直接使用的精确面部描述。
+从照片中自动提取 **80+ 个可量化的人脸几何维度**，输出的 DNA JSON **可直接交给 AI 使用**，无需手动整理。
+
+## 🔗 直接喂给 AI
+
+```
+照片 → extract.py → DNA JSON → AI 生图 / AI 换脸 / AI 建模
+```
+
+整个流程自动化，输出格式与以下工具兼容：
+
+| 下游工具 | 用法 |
+|----------|------|
+| **Seedream** | `generate_prompt.py` 直接生成提示词 |
+| **Stable Diffusion** | DNA JSON 中的 `description` 字段即 prompt |
+| **Midjourney** | 复制 `description` 或 `generate_prompt.py` 输出 |
+| **ComfyUI** | JSON 节点输入面部参数 |
+| **任何 LLM** | 把 DNA JSON 贴给 ChatGPT/Claude，让它风格化描述 |
 
 ## ✨ 核心能力
 
